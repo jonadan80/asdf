@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추억의 점프점프 - Retro Jump Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        .retro-font {
+            font-family: 'Press Start 2P', 'Noto Sans KR', sans-serif;
+        }
+        .main-font {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        /* Retro blink effect */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .blink {
+            animation: blink 1.5s infinite;
+        }
+        /* Custom scrollbar for shop/achievements */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        /* Canvas shadow glow */
+        .canvas-glow {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white main-font min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+    <!-- Header/Navigation -->
+    <header class="bg-slate-900 border-b-4 border-purple-600 px-4 py-3 shadow-lg">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl animate-bounce">🏃</span>
+                <div>
+                    <h1 class="text-lg md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 retro-font tracking-wider">RETRO JUMP</h1>
+                    <p class="text-xs text-purple-300 font-bold">추억의 8비트 점프 게임</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-800 border-2 border-yellow-400 px-3 py-1 rounded-full flex items-center gap-2">
+                    <span class="text-yellow-400 text-sm"><i class="fas fa-coins animate-spin"></i></span>
+                    <span id="global-coin-count" class="retro-font text-xs text-yellow-300">0</span>
+                </div>
+                <button id="btn-sound-toggle" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-full border border-slate-600 transition">
+                    <i id="sound-icon" class="fas fa-volume-up text-purple-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-5xl mx-auto w-full gap-4">
+        
+        <!-- Game Area Wrapper -->
+        <div class="relative w-full max-w-4xl bg-slate-900 border-4 border-slate-700 rounded-2xl overflow-hidden canvas-glow flex flex-col">
+            
+            <!-- STAGE INFO OVERLAY -->
+            <div id="game-hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none z-10 hidden">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full border border-purple-500/30">
+                        <span class="text-red-500 text-xs">❤️</span>
+                        <div id="hud-lives" class="flex gap-1 text-red-500 text-sm">⭐⭐⭐</div>
+                    </div>
+                    <!-- Powerups indicators -->
+                    <div id="hud-buffs" class="flex gap-2 mt-1">
+                        <!-- Buff icons dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="flex flex-col items-end gap-1">
+                    <div class="bg-black/60 px-4 py-1.5 rounded-lg border border-purple-500/30 flex flex-col items-end">
+                        <span class="text-[10px] text-purple-300 retro-font uppercase">SCORE</span>
+                        <span id="hud-score" class="retro-font text-xl text-yellow-300">00000</span>
+                    </div>
+                    <div class="bg-black/60 px-3 py-1 rounded-lg border border-yellow-500/20 flex items-center gap-2">
+                        <i class="fas fa-coins text-yellow-400 text-xs"></i>
+                        <span id="hud-coins" class="retro-font text-xs text-yellow-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 1: MAIN MENU -->
+            <div id="screen-menu" class="w-full min-h-[400px] py-8 px-6 flex flex-col items-center justify-between bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 relative">
+                <!-- Retro background grid lines -->
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent pointer-events-none"></div>
+                
+                <div class="text-center z-10 flex flex-col items-center mt-4">
+                    <div class="relative">
+                        <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 retro-font tracking-wider mb-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+                            RETRO RUN
+                        </h2>
+                        <span class="absolute -top-6 -right-12 bg-red-500 text-white text-[9px] retro-font font-bold px-2 py-1 rounded-full rotate-12 uppercase animate-pulse border border-white">
+                            NEW
+                        </span>
+                    </div>
+                    <p class="text-sm md:text-base text-purple-200 tracking-wide font-medium">소싯적 오락실에서 즐기던 무한 장애물 점프!</p>
+                </div>
+
+                <!-- Hero Mascot Preview -->
+                <div class="my-6 z-10 flex flex-col items-center">
+                    <div class="relative w-24 h-24 bg-purple-950/50 border-4 border-dashed border-purple-500/40 rounded-full flex items-center justify-center">
+                        <!-- Animated CSS character sprite preview -->
+                        <span id="menu-avatar-preview" class="text-5xl transition-all duration-300">🏃</span>
+                    </div>
+                    <p id="menu-avatar-name" class="mt-2 text-xs font-bold text-yellow-400 retro-font">길동이 (기본)</p>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="w-full max-w-md flex flex-col gap-3 z-10">
+                    <button id="btn-start-game" class="w-full bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-slate-950 text-lg md:text-xl font-bold retro-font py-4 px-6 rounded-2xl border-b-8 border-orange-700 active:border-b-2 active:translate-y-[6px] transition-all shadow-[0_10px_20px_rgba(245,158,11,0.3)]">
+                        게임 시작하기!
+                    </button>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-open-shop" class="bg-slate-800 hover:bg-slate-700 text-white border-2 border-purple-600 hover:border-purple-400 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition text-sm">
+                            <i class="fas fa-store text-pink-400"></i> 캐릭터 상점
+                        </button>
+                        <button id="btn-open-settings" class="bg-slate-800 hover:bg-slate-700 text-white border-2 border-slate-600 hover:border-slate-500 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition text-sm">
+                            <i class="fas fa-sliders-h text-cyan-400"></i> 환경 설정
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer tip -->
+                <div class="text-center mt-4 text-[11px] text-slate-400 max-w-xs z-10">
+                    PC: <span class="bg-slate-800 px-1 py-0.5 rounded text-slate-300 font-bold">Space</span> / <span class="bg-slate-800 px-1 py-0.5 rounded text-slate-300 font-bold">↑</span> (점프), <span class="bg-slate-800 px-1 py-0.5 rounded text-slate-300 font-bold">↓</span> (슬라이드)<br>
+                    모바일: 화면의 터치 버튼을 이용해 제어하세요!
+                </div>
+            </div>
+
+            <!-- SCREEN 2: GAMEPLAY -->
+            <div id="screen-game" class="w-full relative hidden">
+                <canvas id="game-canvas" class="w-full block bg-slate-900" width="800" height="400"></canvas>
+                
+                <!-- On-screen mobile controls -->
+                <div id="mobile-controls" class="absolute bottom-4 left-0 w-full px-6 flex justify-between items-center pointer-events-none md:hidden">
+                    <!-- Left Slide button -->
+                    <button id="btn-mobile-slide" class="pointer-events-auto w-16 h-16 rounded-full bg-slate-900/80 border-4 border-cyan-500 active:scale-95 flex items-center justify-center text-cyan-400 shadow-lg select-none" style="-webkit-tap-highlight-color: transparent;">
+                        <span class="flex flex-col items-center">
+                            <i class="fas fa-chevron-down text-lg"></i>
+                            <span class="text-[9px] font-bold">SLIDE</span>
+                        </span>
+                    </button>
+                    
+                    <!-- Right Jump button -->
+                    <button id="btn-mobile-jump" class="pointer-events-auto w-20 h-20 rounded-full bg-slate-900/80 border-4 border-purple-500 active:scale-95 flex items-center justify-center text-purple-400 shadow-lg select-none" style="-webkit-tap-highlight-color: transparent;">
+                        <span class="flex flex-col items-center">
+                            <i class="fas fa-chevron-up text-xl animate-bounce"></i>
+                            <span class="text-[10px] font-bold retro-font">JUMP</span>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Pause Button on Screen -->
+                <button id="btn-pause-game" class="absolute top-4 left-4 bg-black/50 border border-slate-600/50 hover:bg-slate-800 p-2 rounded-lg text-white transition pointer-events-auto z-10 text-xs flex items-center gap-1">
+                    <i class="fas fa-pause"></i> 일시정지
+                </button>
+            </div>
+
+            <!-- SCREEN 3: GAME OVER -->
+            <div id="screen-gameover" class="w-full min-h-[400px] py-8 px-6 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-md absolute inset-0 z-30 hidden">
+                <div class="text-center flex flex-col items-center max-w-sm">
+                    <span class="text-6xl mb-2 animate-bounce">☠️</span>
+                    <h2 class="text-3xl font-black text-red-500 retro-font tracking-wider mb-2">GAME OVER</h2>
+                    <p class="text-slate-400 text-xs mb-6 font-bold">장애물을 피하지 못하고 쓰러졌습니다!</p>
+
+                    <!-- Score Card -->
+                    <div class="w-full bg-slate-900 border-2 border-red-500/30 rounded-2xl p-4 mb-6 flex flex-col gap-3 shadow-inner">
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                            <span class="text-xs text-slate-400 font-bold">획득한 점수</span>
+                            <span id="go-score" class="retro-font text-xl text-yellow-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                            <span class="text-xs text-slate-400 font-bold">최고 점수 (High Score)</span>
+                            <span id="go-best" class="retro-font text-sm text-cyan-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400 font-bold">획득한 코인</span>
+                            <span class="flex items-center gap-1.5">
+                                <i class="fas fa-coins text-yellow-400 text-xs"></i>
+                                <span id="go-coins" class="retro-font text-sm text-yellow-300">0</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="w-full flex flex-col gap-2">
+                        <button id="btn-retry" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold retro-font py-3.5 px-6 rounded-xl border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 transition-all">
+                            다시 시도하기
+                        </button>
+                        <button id="btn-go-home" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl border border-slate-600 transition">
+                            메인 화면으로
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: PAUSE OVERLAY -->
+            <div id="screen-pause" class="w-full min-h-[400px] py-8 px-6 flex flex-col items-center justify-center bg-slate-950/90 absolute inset-0 z-30 hidden">
+                <div class="text-center flex flex-col items-center max-w-sm">
+                    <span class="text-5xl mb-3 text-cyan-400 animate-pulse"><i class="fas fa-pause-circle"></i></span>
+                    <h2 class="text-2xl font-black text-white retro-font tracking-wider mb-6">GAME PAUSED</h2>
+
+                    <div class="w-full flex flex-col gap-3">
+                        <button id="btn-resume" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3.5 px-6 rounded-xl border-b-4 border-teal-800 active:border-b-0 active:translate-y-1 transition-all">
+                            계속하기
+                        </button>
+                        <button id="btn-pause-restart" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl border border-slate-600 transition">
+                            처음부터 다시 시작
+                        </button>
+                        <button id="btn-pause-quit" class="w-full bg-slate-900 hover:bg-slate-800 text-red-400 font-bold py-3 px-6 rounded-xl border border-red-900/30 transition">
+                            나가기 (진행도 포기)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: CHARACTER SHOP -->
+            <div id="screen-shop" class="w-full min-h-[400px] py-6 px-6 bg-slate-900 border-t border-slate-800 hidden">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-store text-pink-500 text-xl"></i>
+                        <h3 class="text-lg font-bold text-white">캐릭터 스킨 상점</h3>
+                    </div>
+                    <button id="btn-close-shop" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-3 py-1 rounded-lg text-xs transition">
+                        닫기
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-1" id="shop-container">
+                    <!-- Shop items will be rendered dynamically by JavaScript -->
+                </div>
+
+                <div class="mt-4 bg-purple-950/30 border border-purple-500/20 p-2.5 rounded-xl text-center">
+                    <p class="text-[11px] text-purple-300">💡 코인은 게임 플레이 중에 장애물 사이에 생성되는 황금 동전을 획득해 모을 수 있습니다.</p>
+                </div>
+            </div>
+
+            <!-- SCREEN 6: SETTINGS -->
+            <div id="screen-settings" class="w-full min-h-[400px] py-6 px-6 bg-slate-900 border-t border-slate-800 hidden">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-cog text-cyan-400 text-xl"></i>
+                        <h3 class="text-lg font-bold text-white">환경 설정</h3>
+                    </div>
+                    <button id="btn-close-settings" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white px-3 py-1 rounded-lg text-xs transition">
+                        닫기
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-4 max-w-md mx-auto py-2">
+                    <!-- Audio Settings -->
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">사운드 옵션</h4>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold">효과음 및 배경음</span>
+                            <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="toggle-sound" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer right-0 border-purple-500" checked/>
+                                <label for="toggle-sound" class="toggle-label block overflow-hidden h-6 rounded-full bg-purple-500 cursor-pointer"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Theme/Map Select -->
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">배경 테마 선택</h4>
+                        <div class="grid grid-cols-3 gap-2" id="theme-selector-container">
+                            <!-- Theme selectors will be added dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Game Reset -->
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-xs font-bold text-red-400 uppercase tracking-wider">데이터 초기화</h4>
+                            <p class="text-[10px] text-slate-400">모든 코인, 스킨 잠금 해제, 최고기록이 삭제됩니다.</p>
+                        </div>
+                        <button id="btn-reset-data" class="bg-red-950/50 hover:bg-red-900 text-red-300 hover:text-white border border-red-800 text-xs font-bold py-2 px-3 rounded-lg transition">
+                            초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Instructions Block -->
+        <div class="w-full max-w-4xl bg-slate-900/50 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between text-xs text-slate-400">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">💡</span>
+                <p><strong>아이템 도움말:</strong> 점프하며 장애물을 피하는 동시에 나타나는 <strong>자석(🧲)</strong>, <strong>보호막(🛡️)</strong>, <strong>신발(👟, 이단점프)</strong> 아이템을 획득하면 점수가 빠르게 오르며 생존 확률이 급상승합니다!</p>
+            </div>
+            <div class="text-slate-400 flex gap-2 shrink-0">
+                <span class="border border-slate-700 bg-slate-800 px-2 py-1 rounded">PC SpaceBar / UpKey</span>
+                <span class="border border-slate-700 bg-slate-800 px-2 py-1 rounded">Mobile Buttons</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 border-2 border-purple-500 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none text-sm font-bold text-white">
+        <span id="toast-icon">✨</span>
+        <span id="toast-message">알림 메시지</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-4 text-center text-xs text-slate-500">
+        <p>© 2026 Retro Jump. Built with passion for classical gamers.</p>
+    </footer>
+
+    <script>
+        // --- SOUND SYNTHESIZER (Web Audio API) ---
+        // Generates arcade-like synthesized chip-tune retro audio natively
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let soundEnabled = true;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                // Resume audioContext if suspended (browser security policy)
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'jump') {
+                    // Quick pitch sweep upwards
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'slide') {
+                    // Low rustling sweep
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'coin') {
+                    // Short high tone pair
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(987.77, now); // B5
+                    osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'hit') {
+                    // Low noise-like crash
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.linearRampToValueAtTime(30, now + 0.4);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'powerup') {
+                    // Uplifting arpeggio
+                    osc.type = 'triangle';
+                    const scale = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    scale.forEach((freq, idx) => {
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                    });
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'gameover') {
+                    // Sad descending notes
+                    osc.type = 'sawtooth';
+                    const notes = [440, 392, 349, 293]; // A4, G4, F4, D4
+                    notes.forEach((freq, idx) => {
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                    });
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.75);
+                    osc.start(now);
+                    osc.stop(now + 0.75);
+                }
+            } catch (e) {
+                console.warn("Audio Context Error: ", e);
+            }
+        }
+
+        // --- GAME SYSTEM CONFIG & STATE ---
+        const GAME_STATES = {
+            MENU: 'menu',
+            PLAYING: 'playing',
+            PAUSED: 'paused',
+            GAMEOVER: 'gameover'
+        };
+
+        const THEMES = {
+            SCHOOL: {
+                name: '정겨운 학교 운동장',
+                skyColor: '#bae6fd', // light cyan
+                groundColor: '#d97706', // amber-600
+                cloudColor: '#ffffff',
+                accentColor: '#4b5563',
+                particleColor: '#f59e0b'
+            },
+            NEON: {
+                name: '레트로 사이버펑크',
+                skyColor: '#0f172a', // slate-900
+                groundColor: '#8b5cf6', // purple-500
+                cloudColor: '#ec4899', // pink-500 (used for city wireframe)
+                accentColor: '#06b6d4',
+                particleColor: '#a855f7'
+            },
+            LAVA: {
+                name: '공룡 시대 용암 화산',
+                skyColor: '#450a0a', // red-950
+                groundColor: '#ef4444', // red-500
+                cloudColor: '#f97316', // orange smoke
+                accentColor: '#7f1d1d',
+                particleColor: '#ef4444'
+            }
+        };
+
+        const SKINS = [
+            { id: 'gildong', name: '길동이 (기본)', emoji: '🏃', cost: 0, scale: 1.0, perk: '없음' },
+            { id: 'dino', name: '공룡우기', emoji: '🦖', cost: 30, scale: 1.1, perk: '자석 탐지 범위 +20%' },
+            { id: 'robot', name: '보행로봇', emoji: '🤖', cost: 75, scale: 1.0, perk: '점프 지연시간 5% 감소' },
+            { id: 'knight', name: '황금 전사', emoji: '👑', cost: 150, scale: 1.1, perk: '점수 획득률 +10%' }
+        ];
+
+        // Default local values
+        let saveState = {
+            coins: 0,
+            highScore: 0,
+            unlockedSkins: ['gildong'],
+            selectedSkin: 'gildong',
+            selectedTheme: 'SCHOOL',
+            soundEnabled: true
+        };
+
+        // Load data from LocalStorage safely
+        function loadGameData() {
+            try {
+                const data = localStorage.getItem('retro_jumper_save');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    saveState = { ...saveState, ...parsed };
+                }
+            } catch (e) {
+                console.error("Local Storage Loading Error: ", e);
+            }
+            updateGlobalHUD();
+        }
+
+        function saveGameData() {
+            try {
+                localStorage.setItem('retro_jumper_save', JSON.stringify(saveState));
+            } catch (e) {
+                console.error("Local Storage Save Error: ", e);
+            }
+            updateGlobalHUD();
+        }
+
+        function showToast(message, icon = '✨') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-icon').innerText = icon;
+            document.getElementById('toast-message').innerText = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Update DOM displays for Coins/Scores
+        function updateGlobalHUD() {
+            document.getElementById('global-coin-count').innerText = saveState.coins;
+            document.getElementById('hud-coins').innerText = saveState.coins;
+            
+            // Sound Sync
+            soundEnabled = saveState.soundEnabled;
+            const checkbox = document.getElementById('toggle-sound');
+            if (checkbox) checkbox.checked = soundEnabled;
+            
+            const icon = document.getElementById('sound-icon');
+            if (icon) {
+                icon.className = soundEnabled ? 'fas fa-volume-up text-purple-400' : 'fas fa-volume-mute text-slate-500';
+            }
+
+            // Sync menu skin info
+            const skinObj = SKINS.find(s => s.id === saveState.selectedSkin) || SKINS[0];
+            document.getElementById('menu-avatar-preview').innerText = skinObj.emoji;
+            document.getElementById('menu-avatar-name').innerText = `${skinObj.name} (${skinObj.perk})`;
+        }
+
+        // Render Character Shop
+        function renderShop() {
+            const container = document.getElementById('shop-container');
+            container.innerHTML = '';
+
+            SKINS.forEach(skin => {
+                const isUnlocked = saveState.unlockedSkins.includes(skin.id);
+                const isSelected = saveState.selectedSkin === skin.id;
+
+                let actionButton = '';
+                if (isSelected) {
+                    actionButton = `<span class="bg-emerald-950 text-emerald-400 border border-emerald-500/30 text-[11px] px-3 py-1.5 rounded-lg font-bold">장착됨</span>`;
+                } else if (isUnlocked) {
+                    actionButton = `<button onclick="equipSkin('${skin.id}')" class="bg-purple-600 hover:bg-purple-500 text-white text-[11px] px-3 py-1.5 rounded-lg font-bold transition">선택</button>`;
+                } else {
+                    const canAfford = saveState.coins >= skin.cost;
+                    const btnClass = canAfford 
+                        ? 'bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold cursor-pointer' 
+                        : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed';
+                    actionButton = `
+                        <button onclick="buySkin('${skin.id}', ${skin.cost})" class="${btnClass} text-[11px] px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition">
+                            <i class="fas fa-coins text-[10px]"></i> ${skin.cost}
+                        </button>
+                    `;
+                }
+
+                const itemHTML = `
+                    <div class="bg-slate-800/80 border-2 ${isSelected ? 'border-purple-500' : 'border-slate-700'} p-3 rounded-xl flex items-center justify-between gap-3 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl bg-slate-900 p-2 rounded-lg border border-slate-700/60">${skin.emoji}</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">${skin.name}</h4>
+                                <p class="text-[10px] text-pink-400 font-medium">특성: ${skin.perk}</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${actionButton}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += itemHTML;
+            });
+        }
+
+        // Render Theme Choice in Settings
+        function renderThemeSelectors() {
+            const container = document.getElementById('theme-selector-container');
+            container.innerHTML = '';
+
+            Object.keys(THEMES).forEach(key => {
+                const theme = THEMES[key];
+                const isSelected = saveState.selectedTheme === key;
+                const borderClass = isSelected ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-slate-700 hover:border-slate-500';
+                
+                container.innerHTML += `
+                    <button onclick="selectTheme('${key}')" class="bg-slate-900 border-2 ${borderClass} p-2.5 rounded-xl flex flex-col items-center gap-1.5 transition text-center">
+                        <div class="w-full h-8 rounded-md" style="background-color: ${theme.skyColor}"></div>
+                        <span class="text-[10px] font-bold text-slate-300 block truncate w-full">${theme.name}</span>
+                    </button>
+                `;
+            });
+        }
+
+        // Global functions exposed to window for inline onclick attributes
+        window.equipSkin = function(id) {
+            saveState.selectedSkin = id;
+            saveState.soundEnabled = soundEnabled;
+            saveGameData();
+            renderShop();
+            showToast("스킨이 장착되었습니다!", "🛡️");
+        };
+
+        window.buySkin = function(id, cost) {
+            if (saveState.coins >= cost) {
+                saveState.coins -= cost;
+                saveState.unlockedSkins.push(id);
+                saveState.selectedSkin = id;
+                saveGameData();
+                renderShop();
+                playSound('powerup');
+                showToast("스킨을 성공적으로 구매했습니다!", "🎉");
+            } else {
+                showToast("코인이 부족합니다!", "❌");
+            }
+        };
+
+        window.selectTheme = function(key) {
+            saveState.selectedTheme = key;
+            saveGameData();
+            renderThemeSelectors();
+            showToast("테마가 변경되었습니다!", "🏞️");
+        };
+
+
+        // --- CORE GAME ENGINE AND PHYSICS ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Physics values
+        const VIRTUAL_WIDTH = 800;
+        const VIRTUAL_HEIGHT = 400;
+        const GRAVITY = 0.55;
+        const GROUND_Y = VIRTUAL_HEIGHT - 60;
+
+        let gameState = GAME_STATES.MENU;
+        let gameFrame = 0;
+        let score = 0;
+        let collectedCoins = 0;
+        let lives = 3;
+        let gameSpeed = 5;
+        let baseSpeed = 5;
+        let maxSpeed = 12;
+
+        // Player state
+        let player = {
+            x: 80,
+            y: GROUND_Y,
+            width: 44,
+            height: 48,
+            vy: 0,
+            isJumping: false,
+            doubleJumpAvailable: false,
+            isSliding: false,
+            slideTimer: 0,
+            shieldActive: false,
+            shieldTimer: 0,
+            magnetActive: false,
+            magnetTimer: 0,
+            doubleScoreActive: false,
+            doubleScoreTimer: 0,
+            invulnerableFrames: 0,
+            emoji: '🏃',
+            scale: 1.0,
+            perk: 'none'
+        };
+
+        // Obstacles, Items, Background details
+        let obstacles = [];
+        let items = [];
+        let particles = [];
+        let backgroundLayers = [];
+
+        // Dynamic Spawning Control
+        let obstacleSpawnTimer = 0;
+        let itemSpawnTimer = 0;
+
+        // Ensure canvas coordinates are mapped correctly responsive
+        function resizeCanvas() {
+            const rect = canvas.parentNode.getBoundingClientRect();
+            // We use standard virtual width of 800 for game calculations, scale visual canvas drawing
+            canvas.style.width = '100%';
+            // Limit height proportional behavior
+            const calculatedHeight = Math.min(rect.width * 0.5, 400);
+            canvas.style.height = `${calculatedHeight}px`;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+
+        // Obstacle Profiles
+        const OBSTACLE_TYPES = [
+            { name: '낮은 허들', type: 'low', width: 28, height: 42, color: '#f87171', emoji: '🚧' },
+            { name: '새떼', type: 'high', width: 36, height: 32, color: '#fb923c', emoji: '🦅' },
+            { name: '두꺼운 상자', type: 'medium', width: 48, height: 50, color: '#a78bfa', emoji: '📦' },
+            { name: '드론', type: 'floating', width: 40, height: 36, color: '#22d3ee', emoji: '🛸' }
+        ];
+
+        // Item Profiles
+        const ITEM_TYPES = [
+            { name: '코인', type: 'coin', emoji: '🪙', color: '#facc15' },
+            { name: '보호막', type: 'shield', emoji: '🛡️', color: '#38bdf8' },
+            { name: '더블점프화', type: 'doublejump', emoji: '👟', color: '#a78bfa' },
+            { name: '자석', type: 'magnet', emoji: '🧲', color: '#f43f5e' }
+        ];
+
+        // Background Cloud details
+        function generateClouds() {
+            backgroundLayers = [];
+            const themeObj = THEMES[saveState.selectedTheme];
+            // Setup mountains/clouds
+            for (let i = 0; i < 5; i++) {
+                backgroundLayers.push({
+                    x: Math.random() * VIRTUAL_WIDTH,
+                    y: 40 + Math.random() * 120,
+                    size: 30 + Math.random() * 50,
+                    speed: 0.15 + Math.random() * 0.35,
+                    opacity: 0.2 + Math.random() * 0.4,
+                    symbol: themeObj.skyColor === '#0f172a' ? '⭐' : '☁️'
+                });
+            }
+        }
+
+
+        // Manage Spawn logic
+        function spawnObstacle() {
+            const index = Math.floor(Math.random() * OBSTACLE_TYPES.length);
+            const template = OBSTACLE_TYPES[index];
+            
+            // Randomize visual properties slightly to prevent strict repetition
+            let finalY = GROUND_Y - template.height;
+            if (template.type === 'high') {
+                finalY = GROUND_Y - 80; // Sky bird requires sliding/ducking
+            } else if (template.type === 'floating') {
+                finalY = GROUND_Y - 55; // Middle altitude needs carefully timed jumps
+            }
+
+            obstacles.push({
+                x: VIRTUAL_WIDTH + 50,
+                y: finalY,
+                width: template.width,
+                height: template.height,
+                emoji: template.emoji,
+                type: template.type,
+                speedMultiplier: 1.0 + Math.random() * 0.15
+            });
+        }
+
+        function spawnItem() {
+            const rand = Math.random();
+            let selectType = ITEM_TYPES[0]; // Coin is default
+
+            if (rand > 0.6) {
+                // Spawn active powerups
+                const powerups = ITEM_TYPES.slice(1);
+                selectType = powerups[Math.floor(Math.random() * powerups.length)];
+            }
+
+            // High or low floating pattern
+            const alt = Math.random() > 0.5 ? GROUND_Y - 35 : GROUND_Y - 110;
+
+            items.push({
+                x: VIRTUAL_WIDTH + 40,
+                y: alt,
+                width: 28,
+                height: 28,
+                emoji: selectType.emoji,
+                type: selectType.type,
+                bobbingOffset: Math.random() * Math.PI
+            });
+        }
+
+        // Particle System
+        function spawnParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6 - 2,
+                    radius: 2 + Math.random() * 4,
+                    color: color,
+                    alpha: 1,
+                    decay: 0.02 + Math.random() * 0.03
+                });
+            }
+        }
+
+
+        // --- INPUT HANDLING ---
+        const keys = {};
+
+        function handleJump() {
+            if (gameState !== GAME_STATES.PLAYING) return;
+
+            const skinObj = SKINS.find(s => s.id === saveState.selectedSkin) || SKINS[0];
+            const jumpMod = skinObj.id === 'robot' ? 1.05 : 1.0;
+
+            if (!player.isJumping) {
+                player.vy = -12.5 * jumpMod;
+                player.isJumping = true;
+                player.doubleJumpAvailable = player.perkDoubleJump || false; // default or temporary perk
+                player.isSliding = false;
+                playSound('jump');
+                spawnParticles(player.x + player.width/2, player.y + player.height, '#9333ea', 5);
+            } else if (player.doubleJumpAvailable) {
+                player.vy = -10.5 * jumpMod;
+                player.doubleJumpAvailable = false;
+                playSound('jump');
+                spawnParticles(player.x + player.width/2, player.y + player.height/2, '#c084fc', 8);
+            }
+        }
+
+        function handleSlideStart() {
+            if (gameState !== GAME_STATES.PLAYING) return;
+            if (!player.isJumping) {
+                player.isSliding = true;
+                player.height = 28; // Smaller physical box
+                playSound('slide');
+            }
+        }
+
+        function handleSlideEnd() {
+            if (player.isSliding) {
+                player.isSliding = false;
+                player.height = 48; // Restore normal size
+            }
+        }
+
+        // Event Listeners (Keyboard)
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                handleJump();
+            }
+            if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                handleSlideStart();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+            if (e.code === 'ArrowDown') {
+                handleSlideEnd();
+            }
+        });
+
+        // Touch Control Listeners (Mobile HUD Buttons)
+        const btnMobileJump = document.getElementById('btn-mobile-jump');
+        const btnMobileSlide = document.getElementById('btn-mobile-slide');
+
+        btnMobileJump.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleJump();
+        });
+
+        btnMobileSlide.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleSlideStart();
+        });
+
+        btnMobileSlide.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleSlideEnd();
+        });
+
+
+        // --- PHYSICS UPDATES & GAME LOOP ---
+        function updateGame() {
+            if (gameState !== GAME_STATES.PLAYING) return;
+
+            gameFrame++;
+            // Slowly increase base speed over time
+            if (gameFrame % 250 === 0 && gameSpeed < maxSpeed) {
+                gameSpeed += 0.45;
+            }
+
+            // HUD Score tracking
+            const skinObj = SKINS.find(s => s.id === saveState.selectedSkin) || SKINS[0];
+            const multiplier = skinObj.id === 'knight' ? 1.1 : 1.0;
+            score += Math.floor((gameSpeed * 0.1) * multiplier);
+            document.getElementById('hud-score').innerText = String(Math.floor(score)).padStart(5, '0');
+
+            // --- PLAYER PHYSICS ---
+            // Invulnerability Frame timer
+            if (player.invulnerableFrames > 0) {
+                player.invulnerableFrames--;
+            }
+
+            // Powerup limits & timers
+            if (player.shieldActive) {
+                player.shieldTimer--;
+                if (player.shieldTimer <= 0) player.shieldActive = false;
+            }
+            if (player.magnetActive) {
+                player.magnetTimer--;
+                if (player.magnetTimer <= 0) player.magnetActive = false;
+            }
+            if (player.doubleJumpActive) {
+                player.doubleJumpTimer--;
+                if (player.doubleJumpTimer <= 0) {
+                    player.doubleJumpActive = false;
+                    player.perkDoubleJump = false;
+                }
+            }
+
+            // Update UI Powerup labels
+            renderBuffUI();
+
+            // Y Axis motion
+            player.vy += GRAVITY;
+            player.y += player.vy;
+
+            // Collision boundary with ground
+            const currentFloor = GROUND_Y - (player.isSliding ? 0 : 0);
+            if (player.y >= GROUND_Y - player.height) {
+                player.y = GROUND_Y - player.height;
+                player.vy = 0;
+                player.isJumping = false;
+                if (player.doubleJumpActive) {
+                    player.doubleJumpAvailable = true;
+                }
+            }
+
+            // Spawn Particles behind running character
+            if (!player.isJumping && gameFrame % 6 === 0) {
+                const themeObj = THEMES[saveState.selectedTheme];
+                spawnParticles(player.x, GROUND_Y, themeObj.particleColor, 2);
+            }
+
+            // --- BACKGROUNDS & OBSTACLES & ITEMS GENERATION AND UPDATES ---
+            // Move Clouds
+            backgroundLayers.forEach(layer => {
+                layer.x -= layer.speed * (gameSpeed * 0.5);
+                if (layer.x + layer.size < -50) {
+                    layer.x = VIRTUAL_WIDTH + 50;
+                    layer.y = 40 + Math.random() * 120;
+                }
+            });
+
+            // Timed Obstacle spawn routine
+            obstacleSpawnTimer--;
+            if (obstacleSpawnTimer <= 0) {
+                spawnObstacle();
+                // Spawn interval scales down as speed scales up to maintain high-pace challenge
+                obstacleSpawnTimer = Math.max(50, 110 - Math.floor(gameSpeed * 5) + Math.floor(Math.random() * 40));
+            }
+
+            // Timed Item spawn routine
+            itemSpawnTimer--;
+            if (itemSpawnTimer <= 0) {
+                spawnItem();
+                itemSpawnTimer = 160 + Math.floor(Math.random() * 140);
+            }
+
+            // Move Obstacles & Detect Collisions
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.x -= gameSpeed * obs.speedMultiplier;
+
+                // Delete out-of-screen objects
+                if (obs.x + obs.width < -100) {
+                    obstacles.splice(i, 1);
+                    continue;
+                }
+
+                // Check physical hit box overlap
+                if (checkOverlap(player, obs)) {
+                    if (player.invulnerableFrames === 0) {
+                        if (player.shieldActive) {
+                            // Shield absorbs the strike
+                            player.shieldActive = false;
+                            player.invulnerableFrames = 45; // brief immunity
+                            playSound('hit');
+                            spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, '#38bdf8', 15);
+                            obstacles.splice(i, 1);
+                            showToast("보호막이 충격을 막아냈습니다!", "🛡️");
+                        } else {
+                            // Deduct Live
+                            lives--;
+                            player.invulnerableFrames = 60; // long immunity
+                            playSound('hit');
+                            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#ef4444', 18);
+                            obstacles.splice(i, 1);
+                            
+                            updateLivesUI();
+
+                            if (lives <= 0) {
+                                triggerGameOver();
+                            } else {
+                                showToast("장애물 충돌! 생명 감소!", "💥");
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            // Move Items & Magnet Attraction
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.x -= gameSpeed;
+
+                // Magnet Attraction Logic
+                if (player.magnetActive) {
+                    const skinObj = SKINS.find(s => s.id === saveState.selectedSkin) || SKINS[0];
+                    const rangeBonus = skinObj.id === 'dino' ? 1.2 : 1.0;
+                    const dx = (player.x + player.width/2) - (item.x + item.width/2);
+                    const dy = (player.y + player.height/2) - (item.y + item.height/2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 160 * rangeBonus) {
+                        // Slowly fly towards player
+                        item.x += (dx / distance) * (gameSpeed + 4);
+                        item.y += (dy / distance) * (gameSpeed + 4);
+                    }
+                }
+
+                // Clean-up offscreen
+                if (item.x + item.width < -100) {
+                    items.splice(i, 1);
+                    continue;
+                }
+
+                // Overlap collision
+                if (checkOverlap(player, item)) {
+                    playSound('coin');
+                    spawnParticles(item.x + item.width/2, item.y + item.height/2, '#fbbf24', 8);
+
+                    if (item.type === 'coin') {
+                        collectedCoins++;
+                        document.getElementById('hud-coins').innerText = collectedCoins;
+                    } else if (item.type === 'shield') {
+                        player.shieldActive = true;
+                        player.shieldTimer = 350; // frames duration
+                        showToast("보호막 획득! 충돌 1회 자동 방어!", "🛡️");
+                    } else if (item.type === 'doublejump') {
+                        player.doubleJumpActive = true;
+                        player.perkDoubleJump = true;
+                        player.doubleJumpAvailable = true;
+                        player.doubleJumpTimer = 450;
+                        showToast("이단 점프 구두 획득!", "👟");
+                    } else if (item.type === 'magnet') {
+                        player.magnetActive = true;
+                        player.magnetTimer = 450;
+                        showToast("자석 아이템 활성화! 코인을 끌어당깁니다!", "🧲");
+                    }
+
+                    items.splice(i, 1);
+                }
+            }
+
+            // Update active particles physics
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.decay;
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+
+        // Intersection Hitbox Overlap Checker
+        function checkOverlap(rect1, rect2) {
+            // Give slightly smaller collision bounds for generous, satisfying pixel-perfect feels
+            const paddingX = 6;
+            const paddingY = 4;
+            return rect1.x + paddingX < rect2.x + rect2.width - paddingX &&
+                   rect1.x + rect1.width - paddingX > rect2.x + paddingX &&
+                   rect1.y + paddingY < rect2.y + rect2.height - paddingY &&
+                   rect1.y + rect1.height - paddingY > rect2.y + paddingY;
+        }
+
+        // Live stats indicator
+        function updateLivesUI() {
+            const container = document.getElementById('hud-lives');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < lives) {
+                    container.innerHTML += '⭐';
+                } else {
+                    container.innerHTML += '🖤';
+                }
+            }
+        }
+
+        // Active Buff Indicators overlay HTML
+        function renderBuffUI() {
+            const container = document.getElementById('hud-buffs');
+            container.innerHTML = '';
+
+            if (player.shieldActive) {
+                container.innerHTML += `
+                    <div class="bg-sky-950/80 border border-sky-400 text-sky-400 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                        <span>🛡️</span> <span>${Math.ceil(player.shieldTimer / 60)}s</span>
+                    </div>
+                `;
+            }
+            if (player.doubleJumpActive) {
+                container.innerHTML += `
+                    <div class="bg-purple-950/80 border border-purple-400 text-purple-400 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                        <span>👟</span> <span>${Math.ceil(player.doubleJumpTimer / 60)}s</span>
+                    </div>
+                `;
+            }
+            if (player.magnetActive) {
+                container.innerHTML += `
+                    <div class="bg-rose-950/80 border border-rose-400 text-rose-400 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                        <span>🧲</span> <span>${Math.ceil(player.magnetTimer / 60)}s</span>
+                    </div>
+                `;
+            }
+        }
+
+
+        // --- DRAW GRAPHICS ON CANVAS ---
+        function drawGame() {
+            // Get current theme parameters
+            const theme = THEMES[saveState.selectedTheme];
+
+            // 1. Draw Sky Background
+            ctx.fillStyle = theme.skyColor;
+            ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+
+            // Special Grid Floor for Cyberpunk/Neon Theme
+            if (saveState.selectedTheme === 'NEON') {
+                ctx.strokeStyle = 'rgba(236, 72, 153, 0.2)';
+                ctx.lineWidth = 1;
+                for (let x = 0; x < VIRTUAL_WIDTH; x += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 150);
+                    ctx.lineTo(x, GROUND_Y);
+                    ctx.stroke();
+                }
+                for (let y = 150; y < GROUND_Y; y += 25) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(VIRTUAL_WIDTH, y);
+                    ctx.stroke();
+                }
+            }
+
+            // 2. Draw Clouds/Mountains
+            backgroundLayers.forEach(layer => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${layer.opacity})`;
+                if (saveState.selectedTheme === 'NEON') {
+                    ctx.fillStyle = `rgba(236, 72, 153, ${layer.opacity})`;
+                } else if (saveState.selectedTheme === 'LAVA') {
+                    ctx.fillStyle = `rgba(249, 115, 22, ${layer.opacity})`;
+                }
+                ctx.font = `${layer.size}px Arial`;
+                ctx.fillText(layer.symbol, layer.x, layer.y);
+            });
+
+            // 3. Draw Ground Line
+            ctx.fillStyle = theme.groundColor;
+            ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, VIRTUAL_HEIGHT - GROUND_Y);
+            
+            // Neon accent border
+            ctx.fillStyle = theme.accentColor;
+            ctx.fillRect(0, GROUND_Y, VIRTUAL_WIDTH, 4);
+
+            // 4. Draw Obstacles
+            obstacles.forEach(obs => {
+                // Render stylized visual
+                ctx.font = `${obs.height + 4}px Arial`;
+                ctx.fillText(obs.emoji, obs.x - 2, obs.y + obs.height - 2);
+            });
+
+            // 5. Draw Items
+            items.forEach(item => {
+                // Bobbing hover movement logic
+                const bob = Math.sin((gameFrame * 0.08) + item.bobbingOffset) * 4;
+                ctx.font = '24px Arial';
+                ctx.fillText(item.emoji, item.x, item.y + bob + 20);
+            });
+
+            // 6. Draw Particles
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 7. Draw Player Character (Emoji format)
+            const skinObj = SKINS.find(s => s.id === saveState.selectedSkin) || SKINS[0];
+            
+            ctx.save();
+            // Flashing animation during invulnerability frames
+            if (player.invulnerableFrames % 6 > 3) {
+                ctx.globalAlpha = 0.3;
+            }
+
+            // Draw circular active shield bubble around player
+            if (player.shieldActive) {
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(player.x + player.width/2, player.y + player.height/2, Math.max(player.width, player.height) * 0.7, 0, Math.PI * 2);
+                ctx.stroke();
+                // Inner blue tint glow
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+                ctx.fill();
+            }
+
+            ctx.font = `${40 * skinObj.scale}px Arial`;
+            
+            // Adjust emoji offset slightly if sliding/jumping
+            let drawY = player.y + player.height;
+            if (player.isSliding) {
+                // Slide rotation mock
+                ctx.translate(player.x + player.width/2, player.y + player.height/2);
+                ctx.rotate(Math.PI / 2.5); // Tilt emoji slightly on slides
+                ctx.fillText(skinObj.emoji, -player.width/2, player.height/2 - 4);
+            } else {
+                ctx.fillText(skinObj.emoji, player.x, drawY);
+            }
+
+            ctx.restore();
+        }
+
+
+        // --- LOOP CONTROLLER ---
+        function loop() {
+            if (gameState === GAME_STATES.PLAYING) {
+                updateGame();
+                drawGame();
+                requestAnimationFrame(loop);
+            }
+        }
+
+        // Switch Engine Screens
+        function changeState(newState) {
+            gameState = newState;
+
+            // Hide all screen components first
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-gameover').classList.add('hidden');
+            document.getElementById('screen-pause').classList.add('hidden');
+            document.getElementById('game-hud').classList.add('hidden');
+
+            if (newState === GAME_STATES.MENU) {
+                document.getElementById('screen-menu').classList.remove('hidden');
+                updateGlobalHUD();
+            } else if (newState === GAME_STATES.PLAYING) {
+                document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('game-hud').classList.remove('hidden');
+                resizeCanvas();
+                requestAnimationFrame(loop);
+            } else if (newState === GAME_STATES.PAUSED) {
+                document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('screen-pause').classList.remove('hidden');
+                document.getElementById('game-hud').classList.remove('hidden');
+            } else if (newState === GAME_STATES.GAMEOVER) {
+                document.getElementById('screen-game').classList.remove('hidden');
+                document.getElementById('screen-gameover').classList.remove('hidden');
+                document.getElementById('game-hud').classList.add('hidden'); // hide game hud on gameover screen
+            }
+        }
+
+        // Initialize elements, scores, modifiers for fresh Game Run
+        function startNewRun() {
+            gameFrame = 0;
+            score = 0;
+            collectedCoins = 0;
+            lives = 3;
+            gameSpeed = baseSpeed;
+
+            // Fetch chosen Skin
+            const skinObj = SKINS.find(s => s.id === saveState.selectedSkin) || SKINS[0];
+
+            player.x = 80;
+            player.y = GROUND_Y - 48;
+            player.vy = 0;
+            player.isJumping = false;
+            player.isSliding = false;
+            player.height = 48;
+            player.shieldActive = false;
+            player.magnetActive = false;
+            player.doubleJumpActive = false;
+            player.perkDoubleJump = false;
+            player.invulnerableFrames = 0;
+
+            obstacles = [];
+            items = [];
+            particles = [];
+            
+            obstacleSpawnTimer = 60;
+            itemSpawnTimer = 100;
+
+            generateClouds();
+            updateLivesUI();
+            changeState(GAME_STATES.PLAYING);
+        }
+
+        function triggerGameOver() {
+            gameState = GAME_STATES.GAMEOVER;
+            playSound('gameover');
+
+            // Save Coins and Calculate best scores
+            saveState.coins += collectedCoins;
+            if (score > saveState.highScore) {
+                saveState.highScore = score;
+                showToast("최고 점수 경신 달성! 🎉", "👑");
+            }
+
+            saveGameData();
+
+            // Populate cards
+            document.getElementById('go-score').innerText = Math.floor(score);
+            document.getElementById('go-best').innerText = Math.floor(saveState.highScore);
+            document.getElementById('go-coins').innerText = collectedCoins;
+
+            changeState(GAME_STATES.GAMEOVER);
+        }
+
+
+        // --- BUTTON EVENTS AND CLICK HANDLERS ---
+        document.getElementById('btn-start-game').addEventListener('click', startNewRun);
+
+        document.getElementById('btn-retry').addEventListener('click', startNewRun);
+
+        document.getElementById('btn-go-home').addEventListener('click', () => {
+            changeState(GAME_STATES.MENU);
+        });
+
+        // Pause options
+        document.getElementById('btn-pause-game').addEventListener('click', () => {
+            if (gameState === GAME_STATES.PLAYING) {
+                changeState(GAME_STATES.PAUSED);
+            }
+        });
+
+        document.getElementById('btn-resume').addEventListener('click', () => {
+            if (gameState === GAME_STATES.PAUSED) {
+                gameState = GAME_STATES.PLAYING;
+                changeState(GAME_STATES.PLAYING);
+            }
+        });
+
+        document.getElementById('btn-pause-restart').addEventListener('click', startNewRun);
+
+        document.getElementById('btn-pause-quit').addEventListener('click', () => {
+            changeState(GAME_STATES.MENU);
+        });
+
+        // Navigation submenus (Shop & Settings toggle)
+        document.getElementById('btn-open-shop').addEventListener('click', () => {
+            const screenShop = document.getElementById('screen-shop');
+            const screenSettings = document.getElementById('screen-settings');
+            
+            screenSettings.classList.add('hidden');
+            screenShop.classList.toggle('hidden');
+            if (!screenShop.classList.contains('hidden')) {
+                renderShop();
+                screenShop.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        document.getElementById('btn-close-shop').addEventListener('click', () => {
+            document.getElementById('screen-shop').classList.add('hidden');
+        });
+
+        document.getElementById('btn-open-settings').addEventListener('click', () => {
+            const screenShop = document.getElementById('screen-shop');
+            const screenSettings = document.getElementById('screen-settings');
+            
+            screenShop.classList.add('hidden');
+            screenSettings.classList.toggle('hidden');
+            if (!screenSettings.classList.contains('hidden')) {
+                renderThemeSelectors();
+                screenSettings.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        document.getElementById('btn-close-settings').addEventListener('click', () => {
+            document.getElementById('screen-settings').classList.add('hidden');
+        });
+
+        // Settings toggles & resets
+        document.getElementById('toggle-sound').addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+            saveState.soundEnabled = soundEnabled;
+            saveGameData();
+        });
+
+        document.getElementById('btn-sound-toggle').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            saveState.soundEnabled = soundEnabled;
+            saveGameData();
+        });
+
+        document.getElementById('btn-reset-data').addEventListener('click', () => {
+            if (confirm("정말로 게임 데이터를 초기화하시겠습니까? (이 작업은 되돌릴 수 없습니다!)")) {
+                localStorage.removeItem('retro_jumper_save');
+                saveState = {
+                    coins: 0,
+                    highScore: 0,
+                    unlockedSkins: ['gildong'],
+                    selectedSkin: 'gildong',
+                    selectedTheme: 'SCHOOL',
+                    soundEnabled: true
+                };
+                saveGameData();
+                renderThemeSelectors();
+                renderShop();
+                showToast("모든 데이터가 완벽하게 초기화되었습니다.", "🧹");
+            }
+        });
+
+        // Start engine setup when window loads completely
+        window.onload = function() {
+            loadGameData();
+            resizeCanvas();
+            // Start silent audio context buffer pre-fill
+            document.body.addEventListener('click', () => {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>
